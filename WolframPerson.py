@@ -7,36 +7,9 @@ class WolframPerson:
     def __init__(self, parent, nameToLookup):
         self.parent = parent        #  Parent object, with methods to store values
         self.name = nameToLookup    #  Store the name to lookup
-        lookupComplete = False      #  Lookup not complete yet
+        lookupComplete = False      #  Lookup not completed yet
 
         self.pods = None            #  Value hasn't been set yet, but the variable exists. This allows for "if not self.pods".
-
-        # All the variables we will attempt to find
-        self.shortName                          =   None
-        self.description                        =   None
-
-        self.fullName                           =   None
-        self.dob                                =   None
-        self.pob                                =   None
-        self.dod                                =   None
-        self.pod                                =   None
-
-        self.imageUrl                           =   None
-
-        self.timelineImageUrl                   =   None
-
-        self.notableFacts                       =   None
-
-        self.physicalCharacteristics            =   None
-
-        self.familialRelationships              =   None
-
-        self.scientificContributions            =   None
-
-        self.wikipediaSummary                   =   None
-
-        self.wikipediaPageHitsHistoryImageUrl   =   None
-
 
         self.runLookup()            # For now, it automatically runs
         lookupComplete = True       #  Lookup is now complete
@@ -48,7 +21,7 @@ class WolframPerson:
             return False
 
         else:               # Looks like there were no problems! Let's keep going!
-            self.parsePods()
+            self.parseAndStorePods()
 
     def requestPods(self, name, attemptNumber=1):
         """Returns False if it fails, otherwise returns a dictionary of the pods"""
@@ -82,90 +55,35 @@ class WolframPerson:
             return False
 
 
-    def parsePods(self):
-        """Parses the pods from 'self.pods' """
-        self.shortName, self.description = wpu.parsePodInputInterpretation(self.pods)
+    def parseAndStorePods(self):
+        """Parses the pods from 'self.pods', and stores each using the 'self.parent' object's 'storeResult' method. """
+        store = self.parent.storeResult
+
+        shortName, description          =   wpu.parsePodInputInterpretation(self.pods)
+        store("short name", shortName)
+        store("description", description)
+
+        fullName, dob, pob, dod, pod    =   wpu.parsePodBasicInformation(self.pods)
+        store("full name", fullName)
+        store("date of birth", dob)
+        store("place of birth", pob)
+        store("date of death", dod)
+        store("place of death", pod)
+
+#        imageUrl
+
+#        timelineImageUrl
+
+#        notableFacts
+
+#        physicalCharacteristics
+
+#        familialRelationships
+
+#        scientificContributions
+
+#        wikipediaSummary
+
+#        wikipediaPageHitsHistoryImageUrl
 
 
-
-
-
-
-
-
-
-
-
-
-    def wolfProcessBasicInformationBox(self):
-
-
-
-        ###############################################################################################################
-        #####   Split up the "Basic Information" box into a dictionary   #####
-
-        basicInfoStr = basicInfo['subpods'][0]['plaintext']  # Get 'basic info'
-        basicInfoStr = basicInfoStr.replace(' \n ',
-                                            ' ')  # If there's a space before and after a newline, the text should actually be one line
-        basicInfoList = re.split(' \| |\n', basicInfoStr)  # Make the info a list
-
-        # Turn the list into a dictionary
-        basicInfoDict = {}
-        for i in range(0, len(basicInfoList), 2):
-            item = basicInfoList[i]
-            nextItem = basicInfoList[i + 1]
-            basicInfoDict[item] = nextItem
-        ###############################################################################################################
-
-
-
-        ###############################################################################################################
-        #####   Process the date of birth information from the "Basic Information" box   #####
-        dateOfBirthStr = basicInfoDict['date of birth'][:-1]  # Remove trailing ')'
-        print(dateOfBirthStr)
-        dateOfBirthList = re.split(' \((?=[\da])',
-                                   dateOfBirthStr)  # Split into [(plaintext date), (unparsed age OR number of years ago)]
-
-        unparsedElapsedYears = dateOfBirthList[
-            1]  # get Second item (string which contains elapsed years since birth somewhere)
-
-        # Extract the int out of the string
-        strippedElapsedYears = re.findall("\d+",
-                                          unparsedElapsedYears)  # Only keeps digits, grouping any consecutive ones
-        parsedElapsedYears = int(
-            strippedElapsedYears[0])  # should only be one item in the regex's results, and it should be the first one
-
-        dateOfBirthList[
-            1] = parsedElapsedYears  # Leaves dateOfBirthList as [Date, Years ago].   Write the int back into the list, overwriting the unparsed string
-        ###############################################################################################################
-
-
-
-        ###############################################################################################################
-        #####   Process the date of death information from the "Basic Information" box  #####
-        if 'date of death' in basicInfoDict:
-            dateOfDeathInfoStr = basicInfoDict['date of death'][:-1]  # Remove trailing ')'
-            dateOfDeathInfoList = re.split(' \((?=[\da])', dateOfDeathInfoStr)
-
-            deathDateStr = dateOfDeathInfoList[0]  # Date (string)
-            deathYearsAgo = int(
-                dateOfDeathInfoList[2].split(' ')[0])  # keep only first item (remove trailing 'years ago')
-            deathAge = int(dateOfDeathInfoList[1].split(' ')[1])  # keep only middle item (remove preceeding 'age')
-
-            dateOfDeathList = [deathDateStr, deathAge, deathYearsAgo]  # Date, Age at time, Years ago
-            dead = True
-        else:
-            dead = False
-        ###############################################################################################################
-
-        # Input interpretation
-        self.storeResult('name', name)
-        self.storeResult('description', description)
-
-        # Basic information
-        self.storeResult('full name', basicInfoDict['full name'])
-        self.storeResult('date of birth', dateOfBirthList)
-        self.storeResult('place of birth', basicInfoDict['place of birth'])
-        if dead:
-            self.storeResult('date of death', dateOfDeathList)
-            self.storeResult('place of death', basicInfoDict['place of death'])
