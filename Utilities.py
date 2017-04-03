@@ -25,3 +25,13 @@ def most_common(L):
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
+
+def percentEncode(startingText):
+    encodedText = startingText
+    et = encodedText
+
+    et = et.replace(' ', '%20')
+    et = et.replace(',', '%2C')
+
+    encodedText = et
+    return encodedText

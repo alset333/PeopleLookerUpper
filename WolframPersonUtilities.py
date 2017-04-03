@@ -1,4 +1,6 @@
 import re
+import urllib.request
+import WikimediaUtilities as wmu
 
 def parsePodInputInterpretation(pods):
     """Get short name and short description from "Input interpretation" box.
@@ -80,3 +82,23 @@ def parsePodBasicInformation(pods):
     pod = basicInfoDict['place of death']
 
     return fullName, dob, pob, dod, pod
+
+def parsePodImage(pods):
+    image = pods['Image:PeopleData']['subpods'][0]
+    sourceImageUrl     =   image['imagesource']
+    wolframImageUrl    =   image['img']['src']
+
+    # Let's get some info about the source image url we were given before deciding what url is best
+    sourceImageUrlOpened = urllib.request.urlopen(sourceImageUrl)
+    maintype = sourceImageUrlOpened.info().get_content_maintype()
+    sourceImageUrlOpened.close()
+
+    if maintype == "image":  # The url goes directly to an image
+        return sourceImageUrl  # Return the url
+
+    elif sourceImageUrl.find("http://en.wikipedia.org/wiki/File:") == 0 or sourceImageUrl.find("http://commons.wikimedia.org/wiki/File:") == 0:  # The url goes to a wikimedia page, but is not an image
+        conversionAttemptResult = wmu.directUrlOfFile(sourceImageUrl)  # Returns (success, url)
+        if conversionAttemptResult[0]:
+            return conversionAttemptResult[1]
+
+    return wolframImageUrl  # If we got here, nothing was returned, meaning the attempts to get the source image failed, so we'll return wolfram's version of the image

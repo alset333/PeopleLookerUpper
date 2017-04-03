@@ -70,7 +70,8 @@ class WolframPerson:
         store("date of death", dod)
         store("place of death", pod)
 
-#        imageUrl
+        imageUrl                        =   wpu.parsePodImage(self.pods)
+        store("image url", imageUrl)
 
 #        timelineImageUrl
 
