@@ -1,4 +1,4 @@
-from urllib.request import urlopen
+from urllib.request import urlopen, quote
 import Utilities
 
 FILENAME_CUE = "File:"
@@ -10,7 +10,7 @@ def directUrlOfFile(mediaPageURL):
 
     filenameStart = mediaPageURL.find(FILENAME_CUE) + len(FILENAME_CUE)
     filename = mediaPageURL[filenameStart:]
-    filename_percent_encoded = Utilities.percentEncode(filename)
+    filename_percent_encoded = quote(filename)
     print(filename, filename_percent_encoded)
 
     lines = urlopen(mediaPageURL).readlines()
